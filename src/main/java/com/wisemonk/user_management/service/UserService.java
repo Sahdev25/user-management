@@ -1,25 +1,33 @@
 package com.wisemonk.user_management.service;
 
+import com.wisemonk.user_management.dto.AssignRoleRequest;
 import com.wisemonk.user_management.dto.LoginRequest;
 import com.wisemonk.user_management.dto.LoginResponse;
 import com.wisemonk.user_management.dto.RegistrationRequest;
 import com.wisemonk.user_management.dto.RegistrationResponse;
+import com.wisemonk.user_management.dto.UserProfileResponse;
 import com.wisemonk.user_management.model.Role;
 import com.wisemonk.user_management.model.Users;
 import com.wisemonk.user_management.repository.RolesRepository;
 import com.wisemonk.user_management.repository.UserRepository;
 import com.wisemonk.user_management.security.JwtUtil;
+
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -88,6 +96,48 @@ public class UserService {
                 .active(user.getEnabled())
                 .message("User registered successfully")
                 .build();
+    }
+    
+    public UserProfileResponse getCurrentUserProfile(Authentication authentication) {
+
+        String email = authentication.getName();
+
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        return UserProfileResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .roles(
+                        user.getRoles()
+                                .stream()
+                                .map(Role::getName)
+                                .collect(Collectors.toSet())
+                )
+                .build();
+    }
+    
+    @Transactional
+    public void assignRoles(UUID userId, AssignRoleRequest request) {
+
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        Set<Role> roles = request.getRoles()
+                .stream()
+                .map(roleDto ->
+                        rolesRepository.findByName(roleDto.getRole())
+                                .orElseThrow(() ->
+                                        new EntityNotFoundException(
+                                                "Role not found: " + roleDto.getRole()
+                                        )
+                                )
+                )
+                .collect(Collectors.toSet());
+
+        user.setRoles(roles);
+        userRepository.save(user);
     }
 
 
