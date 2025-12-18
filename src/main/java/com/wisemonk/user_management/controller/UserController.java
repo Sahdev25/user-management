@@ -40,7 +40,7 @@ public class UserController {
         return ResponseEntity.ok(userService.loginUser(request));
     }
 
-//    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(ApiConstants.USERID + ApiConstants.ROLES)
     public ResponseEntity<?> assignRole(
     		@PathVariable UUID userId,

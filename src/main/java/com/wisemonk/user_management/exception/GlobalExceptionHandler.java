@@ -1,4 +1,4 @@
-package com.wisemonk.user_management.controller;
+package com.wisemonk.user_management.exception;
 
 import com.wisemonk.user_management.dto.ApiErrorResponse;
 import jakarta.persistence.EntityNotFoundException;

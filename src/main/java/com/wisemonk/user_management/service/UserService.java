@@ -1,8 +1,10 @@
 package com.wisemonk.user_management.service;
 
 import com.wisemonk.user_management.dto.AssignRoleRequest;
+import com.wisemonk.user_management.dto.LoginEvent;
 import com.wisemonk.user_management.dto.LoginRequest;
 import com.wisemonk.user_management.dto.LoginResponse;
+import com.wisemonk.user_management.dto.RegistrationEvent;
 import com.wisemonk.user_management.dto.RegistrationRequest;
 import com.wisemonk.user_management.dto.RegistrationResponse;
 import com.wisemonk.user_management.dto.UserProfileResponse;
@@ -39,6 +41,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final RolesRepository rolesRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EventPublisher eventPublisher; 
 
 
     public LoginResponse loginUser(LoginRequest loginRequest) {
@@ -60,9 +63,17 @@ public class UserService {
         users.ifPresent(user -> {
             user.setLastLogin(LocalDateTime.now());
             userRepository.save(user);
+            // Publishing Kafka Login Event
+            eventPublisher.publishLoginEvent(
+                    LoginEvent.builder()
+                            .userId(user.getId())
+                            .email(user.getEmail())
+                            .timestamp(LocalDateTime.now())
+                            .build()
+            );
         });
 
-
+       
 
         return LoginResponse.builder()
                 .token(token)
@@ -89,6 +100,15 @@ public class UserService {
                 .build();
 
         userRepository.save(user);
+        
+//        Publishing Kafka Registration Event
+        eventPublisher.publishRegistrationEvent(
+                RegistrationEvent.builder()
+                        .userId(user.getId())
+                        .email(user.getEmail())
+                        .timestamp(LocalDateTime.now())
+                        .build()
+        );
 
         return RegistrationResponse.builder()
                 .username(user.getUsername())
