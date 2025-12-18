@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: user_management
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: sahdev
+      MYSQL_PASSWORD: sahdev@123
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+
+  user-management-app:
+    image: user-management-app
+    container_name: user-management-app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/user_management
+      SPRING_DATASOURCE_USERNAME: sahdev
+      SPRING_DATASOURCE_PASSWORD: sahdev@123
+    restart: always
+
+volumes:
+  mysql_data:
