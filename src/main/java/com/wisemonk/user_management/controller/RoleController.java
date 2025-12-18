@@ -1,6 +1,7 @@
 package com.wisemonk.user_management.controller;
 
 import com.wisemonk.user_management.constants.ApiConstants;
+import com.wisemonk.user_management.dto.RolesCreatedResponse;
 import com.wisemonk.user_management.dto.RolesRequest;
 import com.wisemonk.user_management.service.RoleService;
 import com.wisemonk.user_management.service.UserService;
@@ -22,7 +23,7 @@ public class RoleController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<?> createRoles(
+    public ResponseEntity<RolesCreatedResponse> createRoles(
             @Valid @RequestBody RolesRequest request
             ) {
     	return ResponseEntity.status(HttpStatus.CREATED)

@@ -31,7 +31,7 @@ public class RoleService {
 	            String roleName = dto.getRole().toUpperCase();
 
 	            if (rolesRepository.findByName(roleName).isPresent()) {
-	                continue; // skip duplicates
+	                continue;
 	            }
 
 	            Role role = Role.builder()
